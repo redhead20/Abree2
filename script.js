@@ -42,7 +42,7 @@ const surprises = [
     },
     rewardHtml: `
       <p>💛 Your smile.</p>
-      <img src="images/day1.jpg" style="max-width:100%;border-radius:14px;">
+      <img src="images/day1.JPG" style="max-width:100%;border-radius:14px;">
     `
   },
 
