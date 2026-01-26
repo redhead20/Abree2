@@ -97,7 +97,7 @@ const surprises = [
           display:none;
         "
       >
-        💛 Reward: <strong>You get to choose our next call time.</strong>
+        💛 Reward: <strong>Coupon For: One Free Hug Until You Let Go. Expires 2026-02-01.</strong>
       </div>
     `
   },
