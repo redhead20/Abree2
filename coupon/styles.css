@@ -1,0 +1,162 @@
+:root{
+  --bg:#0b0b10;
+  --card:#14141d;
+  --ink:#f3f4f6;
+  --muted:#b7b7c7;
+  --accent:#ff4d8d;
+  --accent2:#7c5cff;
+  --line:rgba(255,255,255,.12);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--ink);
+  background: radial-gradient(1200px 700px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
+              radial-gradient(900px 600px at 100% 10%, rgba(255,77,141,.25), transparent 55%),
+              var(--bg);
+  min-height:100vh;
+}
+
+header{
+  padding:22px 16px 10px;
+  max-width:980px;
+  margin:0 auto;
+}
+
+h1{
+  margin:0;
+  font-size:1.6rem;
+}
+
+.sub{
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.toolbar{
+  margin-top:14px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.pill{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+}
+
+.pill input{
+  background:none;
+  border:none;
+  outline:none;
+  color:var(--ink);
+}
+
+.btn{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+  color:var(--ink);
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn.primary{
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  border:none;
+}
+
+main{
+  max-width:980px;
+  margin:0 auto;
+  padding:10px 16px 40px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
+  gap:14px;
+}
+
+.coupon{
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.05);
+  position:relative;
+}
+
+.coupon.used{
+  opacity:.55;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  border-bottom:1px dashed rgba(255,255,255,.18);
+}
+
+.tag{
+  font-size:.75rem;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(255,77,141,.18);
+}
+
+.content{
+  padding:14px;
+}
+
+.title{
+  margin:0;
+  font-size:1.15rem;
+}
+
+.desc{
+  margin-top:8px;
+  color:var(--muted);
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  padding:14px;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+
+.actions .btn{
+  flex:1;
+}
+
+.stamp{
+  position:absolute;
+  inset:0;
+  display:none;
+  place-items:center;
+  font-size:2.2rem;
+  font-weight:900;
+  color:rgba(255,255,255,.15);
+  transform:rotate(-12deg);
+}
+
+.coupon.used .stamp{
+  display:grid;
+}
+
+footer{
+  max-width:980px;
+  margin:0 auto;
+  padding:0 16px 30px;
+  color:rgba(255,255,255,.55);
+  font-size:.85rem;
+}

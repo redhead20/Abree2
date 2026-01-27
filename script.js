@@ -1,14 +1,30 @@
 /* ============================
-   RESET ON EVERY RELOAD
+   TEST MODE
+   true  = unlock today automatically
+   false = normal behavior
    ============================ */
-Object.keys(localStorage).forEach(k => {
-  if (k.startsWith("quiz_unlocked_")) localStorage.removeItem(k);
-});
+const FORCE_DATE = "2026-01-28";
+const TEST_MODE = false;
+
+
+/* ============================
+   RESET ON EVERY RELOAD
+   (only in test mode)
+   ============================ */
+if (TEST_MODE) {
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith("quiz_unlocked_")) localStorage.removeItem(k);
+  });
+}
 
 /* ============================
    DATE HELPERS (DENVER TIME)
    ============================ */
 function isoToday() {
+  if (TEST_MODE && FORCE_DATE) {
+    return FORCE_DATE;
+  }
+
   // Force America/Denver (Mountain Time)
   const denverTime = new Date().toLocaleString("en-US", {
     timeZone: "America/Denver"
@@ -21,6 +37,7 @@ function isoToday() {
 
   return `${y}-${m}-${day}`;
 }
+
 
 function daysBetween(a, b) {
   return Math.round(
@@ -97,7 +114,11 @@ const surprises = [
           display:none;
         "
       >
-        💛 Reward: <strong>Coupon For: One Free Hug Until You Let Go. Expires 2026-02-01.</strong>
+        <p style="margin:0 0 10px 0;">💛 Your Day 4 surprise is a whole page I made just for you:</p>
+
+        <a href="coupon/coupon.html" class="checkBtn" target="_blank" style="display:inline-block; text-decoration:none;">
+          Open Surprise 💖
+        </a>
       </div>
     `
   },
@@ -138,6 +159,9 @@ function render() {
   countdown.textContent =
     diff === 0 ? "It’s Thursday 💖" : `${diff} days until Thursday`;
 
+  // ✅ Test mode: auto-unlock today's reward
+  if (TEST_MODE) unlock(today);
+
   const cur = surprises.find(s => s.date === today);
 
   todayBox.innerHTML = cur
@@ -162,11 +186,11 @@ function quiz(s) {
   return `
     <p>${s.trivia.q}</p>
     ${s.trivia.options.map(
-      (o, i) =>
-        `<label class="opt">
+    (o, i) =>
+      `<label class="opt">
            <input type="radio" name="q" value="${i}"> ${o}
          </label>`
-    ).join("")}
+  ).join("")}
     <button id="checkQuizBtn" class="checkBtn">Check</button>
   `;
 }
@@ -235,13 +259,6 @@ const egg = document.getElementById("eggMsg");
 let clicks = 0;
 
 title.addEventListener("click", () => {
-  // Thursday in Denver time
-  const denverDay = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "America/Denver" })
-  ).getDay();
-
-  if (denverDay !== 4) return;
-
   clicks++;
   if (clicks === 5) {
     egg.hidden = false;
