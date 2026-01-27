@@ -1,11 +1,19 @@
 /* ============================
    TEST MODE
-   true  = unlock today automatically
+   true  = allow FORCE_DATE testing + auto-unlock today
    false = normal behavior
    ============================ */
-const FORCE_DATE = "2026-01-28";
-const TEST_MODE = false;
+const TEST_MODE = true;
+const FORCE_DATE = "2026-01-28"; // only used if TEST_MODE = true
 
+/* ============================
+   THURSDAY UNLOCK SETTINGS
+   Denver time (America/Denver)
+   Format: "HH:MM" in 24-hour time
+   Example: "15:30" = 3:30 PM
+   ============================ */
+const THURSDAY_DATE = "2026-01-29";
+const THURSDAY_UNLOCK_TIME = "15:30";
 
 /* ============================
    RESET ON EVERY RELOAD
@@ -18,31 +26,60 @@ if (TEST_MODE) {
 }
 
 /* ============================
-   DATE HELPERS (DENVER TIME)
+   DENVER DATE/TIME (RELIABLE)
    ============================ */
-function isoToday() {
-  if (TEST_MODE && FORCE_DATE) {
-    return FORCE_DATE;
+function getDenverParts() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Denver",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(new Date());
+
+  const map = {};
+  for (const p of parts) {
+    if (p.type !== "literal") map[p.type] = p.value;
   }
 
-  // Force America/Denver (Mountain Time)
-  const denverTime = new Date().toLocaleString("en-US", {
-    timeZone: "America/Denver"
-  });
-
-  const d = new Date(denverTime);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-
-  return `${y}-${m}-${day}`;
+  return {
+    y: map.year,          // "2026"
+    m: map.month,         // "01"
+    d: map.day,           // "29"
+    hh: Number(map.hour), // 0-23
+    mm: Number(map.minute) // 0-59
+  };
 }
 
+/* ============================
+   DATE HELPERS
+   ============================ */
+function isoToday() {
+  if (TEST_MODE && FORCE_DATE) return FORCE_DATE;
+
+  const t = getDenverParts();
+  return `${t.y}-${t.m}-${t.d}`;
+}
 
 function daysBetween(a, b) {
   return Math.round(
     (new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000
   );
+}
+
+/* ============================
+   TIME GATE HELPER
+   ============================ */
+function isAfterUnlockTime(dateIso, timeStr) {
+  // Only enforce the time gate on the target date
+  if (isoToday() !== dateIso) return true;
+
+  const [unlockH, unlockM] = timeStr.split(":").map(Number);
+  const now = getDenverParts();
+
+  return now.hh > unlockH || (now.hh === unlockH && now.mm >= unlockM);
 }
 
 /* ============================
@@ -62,7 +99,6 @@ const surprises = [
       <img src="images/day1.jpg" style="max-width:100%;border-radius:14px;">
     `
   },
-
   {
     date: "2026-01-26",
     title: "Day 2 — Voice Message",
@@ -75,7 +111,6 @@ const surprises = [
       <audio controls src="audio/day2.mp3"></audio>
     `
   },
-
   {
     date: "2026-01-27",
     title: "Day 3 — A Note From Me",
@@ -90,7 +125,6 @@ const surprises = [
       <div id="noteBox" style="margin-top:12px;"></div>
     `
   },
-
   {
     date: "2026-01-28",
     title: "Day 4 — Your Reward",
@@ -116,13 +150,16 @@ const surprises = [
       >
         <p style="margin:0 0 10px 0;">💛 Your Day 4 surprise is a whole page I made just for you:</p>
 
-        <a href="coupon/coupon.html" class="checkBtn" target="_blank" style="display:inline-block; text-decoration:none;">
+        <a href="coupon/coupon.html"
+           class="checkBtn"
+           target="_blank"
+           rel="noopener noreferrer"
+           style="display:inline-block; text-decoration:none;">
           Open Surprise 💖
         </a>
       </div>
     `
   },
-
   {
     date: "2026-01-29",
     title: "Thursday — Big Reveal",
@@ -132,7 +169,7 @@ const surprises = [
       correctIndex: 3
     },
     rewardHtml: `
-      <p style="font-size:1.2rem;">💖 PUT YOUR BIG REVEAL HERE</p>
+      <p style="font-size:1.2rem;">💖 You Get Me!!! </p>
     `
   }
 ];
@@ -153,20 +190,25 @@ function render() {
   const days = document.getElementById("days");
   const countdown = document.getElementById("countdown");
 
-  const thursday = "2026-01-29";
-  const diff = daysBetween(today, thursday);
+  const diff = daysBetween(today, THURSDAY_DATE);
+  countdown.textContent = diff === 0 ? "It’s Thursday 💖" : `${diff} days until Thursday`;
 
-  countdown.textContent =
-    diff === 0 ? "It’s Thursday 💖" : `${diff} days until Thursday`;
-
-  // ✅ Test mode: auto-unlock today's reward
+  // Test mode: auto-unlock today's reward
   if (TEST_MODE) unlock(today);
 
-  const cur = surprises.find(s => s.date === today);
+  let cur = surprises.find(s => s.date === today);
+
+  const thursdayLocked =
+    today === THURSDAY_DATE &&
+    !isAfterUnlockTime(THURSDAY_DATE, THURSDAY_UNLOCK_TIME);
+
+  if (thursdayLocked) cur = null;
 
   todayBox.innerHTML = cur
     ? `<h3>${cur.title}</h3>` + (unlocked(today) ? cur.rewardHtml : quiz(cur))
-    : `<p>No surprise today 💛</p>`;
+    : thursdayLocked
+      ? `<p>⏳ Come back at <strong>${THURSDAY_UNLOCK_TIME}</strong> (Denver time) 💖</p>`
+      : `<p>No surprise today 💛</p>`;
 
   days.innerHTML = "";
   surprises.forEach(s => {
@@ -186,11 +228,11 @@ function quiz(s) {
   return `
     <p>${s.trivia.q}</p>
     ${s.trivia.options.map(
-    (o, i) =>
-      `<label class="opt">
+      (o, i) =>
+        `<label class="opt">
            <input type="radio" name="q" value="${i}"> ${o}
          </label>`
-  ).join("")}
+    ).join("")}
     <button id="checkQuizBtn" class="checkBtn">Check</button>
   `;
 }
@@ -215,7 +257,6 @@ document.addEventListener("click", e => {
   const cur = surprises.find(s => s.date === today);
   if (!cur) return;
 
-  /* Trivia check */
   if (e.target.id === "checkQuizBtn") {
     const pick = document.querySelector("input[name=q]:checked");
     if (!pick) return;
@@ -226,7 +267,6 @@ document.addEventListener("click", e => {
     }
   }
 
-  /* Day 3 — Love note */
   if (e.target.id === "noteBtn") {
     const box = document.getElementById("noteBox");
     if (!box || noteIndex >= noteLines.length) return;
@@ -240,7 +280,6 @@ document.addEventListener("click", e => {
     }
   }
 
-  /* Day 4 — Reward reveal */
   if (e.target.id === "rewardBtn") {
     const box = document.getElementById("rewardBox");
     if (!box) return;
@@ -252,7 +291,7 @@ document.addEventListener("click", e => {
 });
 
 /* ============================
-   EASTER EGG (THURSDAY ONLY — DENVER TIME)
+   EASTER EGG
    ============================ */
 const title = document.getElementById("title");
 const egg = document.getElementById("eggMsg");
