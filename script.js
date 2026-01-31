@@ -3,7 +3,7 @@
    true  = allow FORCE_DATE testing + auto-unlock today
    false = normal behavior
    ============================ */
-const TEST_MODE = false;
+const TEST_MODE = true;
 const FORCE_DATE = "2026-01-28"; // only used if TEST_MODE = true
 
 /* ============================
